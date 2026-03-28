@@ -14,10 +14,12 @@ use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
 
-// 3 Baris ini yang akan menghilangkan garis merah di Actions
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+
 
 class AttendanceResource extends Resource
 {
@@ -114,13 +116,93 @@ class AttendanceResource extends Resource
                 //     ->searchable(),
             ])
             ->filters([
-                // Nanti kita bisa tambahkan filter bulan di sini
+                // --- FITUR BARU: FILTER BULAN & TAHUN ---
+                Filter::make('filter_bulan_tahun')
+                    ->form([
+                        Forms\Components\Select::make('bulan')
+                            ->label('Bulan')
+                            ->options([
+                                '01' => 'Januari',
+                                '02' => 'Februari',
+                                '03' => 'Maret',
+                                '04' => 'April',
+                                '05' => 'Mei',
+                                '06' => 'Juni',
+                                '07' => 'Juli',
+                                '08' => 'Agustus',
+                                '09' => 'September',
+                                '10' => 'Oktober',
+                                '11' => 'November',
+                                '12' => 'Desember',
+                            ]),
+                        Forms\Components\Select::make('tahun')
+                            ->label('Tahun')
+                            ->options([
+                                '2024' => '2024',
+                                '2025' => '2025',
+                                '2026' => '2026',
+                                '2027' => '2027',
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['bulan'],
+                                fn(Builder $query, $bulan): Builder => $query->whereMonth('date', $bulan),
+                            )
+                            ->when(
+                                $data['tahun'],
+                                fn(Builder $query, $tahun): Builder => $query->whereYear('date', $tahun),
+                            );
+                    })
             ])
             ->actions([
-                // Kosongkan sementara agar tidak error
+                \Filament\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Kosongkan sementara agar tidak error
+                \pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction::make()
+                    ->label('Export ke Excel')
+                    ->color('success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exports([
+                        \pxlrbt\FilamentExcel\Exports\ExcelExport::make()
+                            ->withColumns([
+                                // NOMOR URUT: Menggunakan format penulisan yang lebih simpel
+                                \pxlrbt\FilamentExcel\Columns\Column::make('id')
+                                    ->heading('No')
+                                    ->formatStateUsing(function ($state, $record) {
+                                        static $no = 0;
+
+                                        if (!$record || !$record->id) {
+                                            return null;
+                                        }
+
+                                        return ++$no;
+                                    }),
+
+                                // 1. Identitas & Tanggal
+                                \pxlrbt\FilamentExcel\Columns\Column::make('user.name')
+                                    ->heading('Nama Karyawan'),
+                                \pxlrbt\FilamentExcel\Columns\Column::make('date')
+                                    ->heading('Tanggal'),
+
+                                // 2. Data Masuk
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_in_time')
+                                    ->heading('Jam Masuk'),
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_in_latitude')
+                                    ->heading('Lat Masuk'),
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_in_longitude')
+                                    ->heading('Long Masuk'),
+
+                                // 3. Data Keluar
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_out_time')
+                                    ->heading('Jam Keluar'),
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_out_latitude')
+                                    ->heading('Lat Keluar'),
+                                \pxlrbt\FilamentExcel\Columns\Column::make('clock_out_longitude')
+                                    ->heading('Long Keluar'),
+                            ]),
+                    ]),
             ]);
     }
 
