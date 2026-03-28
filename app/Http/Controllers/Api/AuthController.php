@@ -16,6 +16,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'device_id' => 'required',
         ]);
 
         // 2. Cari user berdasarkan email
@@ -33,6 +34,20 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Admin harus login melalui dashboard web.'
             ], 403);
+        }
+
+        if (empty($user->device_id)) {
+            // Ikat device ini ke akun user
+            $user->device_id = $request->device_id;
+            $user->save();
+        }
+
+        // Skenario B: Login Kedua dst (Cek apakah device-nya sama)
+        else if ($user->device_id !== $request->device_id) {
+            // Jika device berbeda, tolak login
+            return response()->json([
+                'message' => 'Akun Anda sudah terikat di device lain. Silakan reset device melalui Admin HRD.'
+            ], 403); // Gunakan kode 403 Forbidden
         }
 
         // 4. Buatkan Token Sanctum
