@@ -61,21 +61,57 @@ class AttendanceResource extends Resource
                 Tables\Columns\TextColumn::make('clock_in_time')
                     ->label('Jam Masuk')
                     ->time(),
+
+                Tables\Columns\TextColumn::make('clock_in_location')
+                    ->label('Lokasi Masuk')
+                    ->getStateUsing(function (Attendance $record) {
+                        return $record->clock_in_latitude ? '📍 Buka Maps' : 'Belum Absen';
+                    })
+                    ->url(function (Attendance $record) {
+                        if ($record->clock_in_latitude && $record->clock_in_longitude) {
+                            return "https://maps.google.com/?q={$record->clock_in_latitude},{$record->clock_in_longitude}";
+                        }
+                        return null;
+                    })
+                    ->openUrlInNewTab()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        '📍 Buka Maps' => 'info',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('clock_out_time')
                     ->label('Jam Keluar')
                     ->time(),
-                Tables\Columns\TextColumn::make('clock_in_latitude')
-                    ->label('Lokasi Masuk')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('clock_in_longitude')
-                    ->label('Lokasi Masuk')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('clock_out_latitude')
+
+                Tables\Columns\TextColumn::make('clock_out_location')
                     ->label('Lokasi Keluar')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('clock_out_longitude')
-                    ->label('Lokasi Keluar')
-                    ->searchable(),
+                    ->getStateUsing(function (Attendance $record) {
+                        return $record->clock_out_latitude ? '📍 Buka Maps' : 'Belum Absen';
+                    })
+                    ->url(function (Attendance $record) {
+                        if ($record->clock_out_latitude && $record->clock_out_longitude) {
+                            return "https://maps.google.com/?q={$record->clock_out_latitude},{$record->clock_out_longitude}";
+                        }
+                        return null;
+                    })
+                    ->openUrlInNewTab()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        '📍 Buka Maps' => 'warning',
+                        default => 'gray',
+                    }),
+                // Tables\Columns\TextColumn::make('clock_in_latitude')
+                //     ->label('Lokasi Masuk')
+                //     ->searchable(),
+                // Tables\Columns\TextColumn::make('clock_in_longitude')
+                //     ->label('Lokasi Masuk')
+                //     ->searchable(),
+                // Tables\Columns\TextColumn::make('clock_out_latitude')
+                //     ->label('Lokasi Keluar')
+                //     ->searchable(),
+                // Tables\Columns\TextColumn::make('clock_out_longitude')
+                //     ->label('Lokasi Keluar')
+                //     ->searchable(),
             ])
             ->filters([
                 // Nanti kita bisa tambahkan filter bulan di sini
