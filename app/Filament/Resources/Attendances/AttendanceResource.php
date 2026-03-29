@@ -13,7 +13,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Filament\Forms;
 use Filament\Tables;
-
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Actions\EditAction;
@@ -52,6 +52,14 @@ class AttendanceResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('image')
+                    ->label('Bukti Foto')
+                    // Mengambil data Base64 langsung dari record
+                    ->state(fn($record) => $record->image)
+                    // Opsional: Atur ukuran agar rapi di tabel
+                    ->circular() // Bentuk lingkaran (keren!)
+                    ->size(50)   // Ukuran 50px
+                    ->defaultImageUrl(url('/images/default-avatar.png')), // Foto default jika null
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Karyawan')
                     ->searchable()
@@ -102,6 +110,7 @@ class AttendanceResource extends Resource
                         '📍 Buka Maps' => 'warning',
                         default => 'gray',
                     }),
+
                 // Tables\Columns\TextColumn::make('clock_in_latitude')
                 //     ->label('Lokasi Masuk')
                 //     ->searchable(),

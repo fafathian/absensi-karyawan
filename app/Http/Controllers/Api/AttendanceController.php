@@ -15,6 +15,7 @@ class AttendanceController extends Controller
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
+            'image' => 'required',
         ]);
 
         $user = $request->user();
@@ -32,17 +33,16 @@ class AttendanceController extends Controller
         }
 
         // 3. Simpan data absen masuk
-        Attendance::create([
-            'user_id' => $user->id,
-            'date' => $today,
-            'clock_in_time' => Carbon::now()->toTimeString(),
+        $attendance = Attendance::create([
+            'user_id' => $request->user()->id,
+            'date' => now()->toDateString(),
+            'clock_in_time' => now()->toTimeString(),
             'clock_in_latitude' => $request->latitude,
             'clock_in_longitude' => $request->longitude,
+            'image' => $request->image, // <--- INI HARUS ADA
         ]);
 
-        return response()->json([
-            'message' => 'Absen masuk berhasil dicatat!'
-        ], 201);
+        return response()->json(['message' => 'Absen berhasil!', 'data' => $attendance]);
     }
 
     public function clockOut(Request $request)
@@ -88,8 +88,12 @@ class AttendanceController extends Controller
 
     public function history(Request $request)
     {
+        $bulan = $request->query('bulan', now()->month);
+        $tahun = $request->query('tahun', now()->year);
+
         $history = Attendance::where('user_id', $request->user()->id)
-            ->whereMonth('date', now()->month)
+            ->whereMonth('date', $bulan)
+            ->whereYear('date', $tahun)
             ->orderBy('date', 'desc')
             ->get();
 

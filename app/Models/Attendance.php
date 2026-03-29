@@ -15,6 +15,7 @@ class Attendance extends Model
         'clock_out_time',
         'clock_out_latitude',
         'clock_out_longitude',
+        'image',
     ];
 
     public function user()
