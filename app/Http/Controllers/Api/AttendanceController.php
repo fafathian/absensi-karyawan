@@ -85,4 +85,14 @@ class AttendanceController extends Controller
             'message' => 'Absen keluar berhasil dicatat!'
         ], 200);
     }
+
+    public function history(Request $request)
+    {
+        $history = Attendance::where('user_id', $request->user()->id)
+            ->whereMonth('date', now()->month)
+            ->orderBy('date', 'desc')
+            ->get();
+
+        return response()->json($history);
+    }
 }

@@ -19,4 +19,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Nanti rute absen masuk & keluar kita taruh di sini!
     Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
     Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+    Route::get('/attendance/history', [App\Http\Controllers\Api\AttendanceController::class, 'history']);
 });
